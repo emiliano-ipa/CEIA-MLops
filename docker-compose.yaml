@@ -150,6 +150,27 @@ services:
       exit 0;
       '
 
+  upload_dataset_to_minio:
+    image: minio/mc:latest
+    container_name: upload_dataset_to_minio
+    profiles:
+      - airflow
+      - all
+    depends_on:
+      - s3
+    networks:
+      - backend
+    volumes:
+      - ./data:/data  # tu archivo local
+    entrypoint: >
+      /bin/sh -c '
+      sleep 5;
+      mc alias set s3 http://s3:9000 minio minio123;
+      mc mb -p s3/data || true;
+      mc cp /data/enriched_employee_dataset.csv s3/data/;
+      exit 0;
+      '
+
   mlflow:
     restart: always
     build: "./dockerfiles/mlflow"
