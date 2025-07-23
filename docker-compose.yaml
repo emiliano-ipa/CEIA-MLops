@@ -36,6 +36,9 @@ x-airflow-common: &airflow-common
     AIRFLOW__API_AUTH__JWT_SECRET: 'qt2Edq6LIRdv5k0DDznVOA=='
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'False' # Change to 'false' to remove the tutorials and examples
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags  # Explicitly set DAGs folder    
+    AIRFLOW__CORE__MIN_FILE_PROCESS_INTERVAL: '10'   # From .env
+    AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: '10'  # From .env
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'True'
@@ -147,8 +150,33 @@ services:
       /usr/bin/mc alias set s3 http://s3:9000 ${MINIO_ACCESS_KEY:-minio} ${MINIO_SECRET_ACCESS_KEY:-minio123};
       /usr/bin/mc mb s3/${MLFLOW_BUCKET_NAME:-mlflow};
       /usr/bin/mc mb s3/${DATA_REPO_BUCKET_NAME:-data};
+       /usr/bin/mc mb s3/${PROCESSED_DATA_BUCKET_NAME:-processed};
+      sleep 5;
+      mc mb -p s3/data || true;
+      mc cp /data/enriched_employee_dataset.csv s3/data/;
       exit 0;
       '
+
+  # upload_dataset_to_minio:
+  #   image: minio/mc:latest
+  #   container_name: upload_dataset_to_minio
+  #   profiles:
+  #     - airflow
+  #     - all
+  #   depends_on:
+  #     - s3
+  #   networks:
+  #     - backend
+  #   volumes:
+  #     - ./data:/data  # tu archivo local
+  #   entrypoint: >
+  #     /bin/sh -c '
+  #     sleep 5;
+  #     mc alias set s3 http://s3:9000 minio minio123;
+  #     mc mb -p s3/data || true;
+  #     mc cp /data/enriched_employee_dataset.csv s3/data/;
+  #     exit 0;
+  #     '
 
   mlflow:
     restart: always
