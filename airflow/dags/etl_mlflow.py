@@ -80,6 +80,12 @@ def etl_mlflow():
             # Encode categoricals
             _, X_train_final, X_test_final = codificar_categoricas(X_train_imp, X_test_imp, ["Gender", "Company Type", "WFH Setup Available"])
 
+            # Scale features
+            _, X_train_final, X_test_final = standard_scaler(X_train_final, X_test_final)
+            # OR
+            # _, X_train_final, X_test_final = min_max_scaler(X_train_final, X_test_final)
+            mlflow.log_param("scaler", "standard")  # o "minmax"
+
             # Log feature statistics
             for col in X_train_final.select_dtypes(include=['float64', 'int64']).columns:
                 mlflow.log_metric(f"{col}_mean", X_train_final[col].mean())

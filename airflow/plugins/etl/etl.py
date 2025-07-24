@@ -4,7 +4,8 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
-from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
+from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler, MinMaxScaler
+
 
 def cargar_datos(path: str, filename: str) -> pd.DataFrame:
     """
@@ -240,22 +241,56 @@ def codificar_categoricas(X_train: pd.DataFrame, X_test: pd.DataFrame, columnas_
 
     return ohe, X_train_full, X_test_full
 
+def standard_scaler(X_train: pd.DataFrame, X_test: pd.DataFrame) -> tuple:
+    """
+    Escala las variables numéricas con StandardScaler
 
-# Proceso de Extract, Load and Transform
-n_semilla = 42
-dataset = cargar_datos("data", "enriched_employee_dataset.csv")
-dataset = eliminar_columnas(dataset, ['Employee ID', 'Date of Joining', 'Years in Company'])
-dataset = eliminar_nulos_columna(dataset, ["Burn Rate"])
-dataset = eliminar_nulos_multiples(dataset)
-X_train, X_test, y_train, y_test = split_dataset(dataset, 0.2, 'Burn Rate', n_semilla)
-variables_para_imputar = [
-    'Designation', 'Resource Allocation', 'Mental Fatigue Score',
-    'Work Hours per Week', 'Sleep Hours', 'Work-Life Balance Score',
-    'Manager Support Score', 'Deadline Pressure Score',
-    'Recognition Frequency'
-]
-imputer, X_train_imputado, X_test_imputado = imputar_variables(X_train, X_test, variables_para_imputar, 10, n_semilla)
-y_train_class, y_test_class = clasificar_burn_rate(y_train, y_test)
-encoder_target, y_train_encoded, y_test_encoded = codificar_target(y_train_class, y_test_class)
-encoder_categoricas, X_train_codif, X_test_codif = codificar_categoricas(X_train_imputado, X_test_imputado, ["Gender", "Company Type", "WFH Setup Available"])
+    :param X_train: Datos train
+    :type X_train: pd.DataFrame
+    :param X_test: Datos test
+    :type X_test: float
+    :returns: Tupla con el scaler y los datos escalados de entrenamiento y testeo.
+    :rtype: tuple
+    """
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    return scaler, pd.DataFrame(X_train_scaled, columns=X_train.columns, index=X_train.index), pd.DataFrame(X_test_scaled, columns=X_test.columns, index=X_test.index)
+
+def min_max_scaler(X_train: pd.DataFrame, X_test: pd.DataFrame) -> tuple:
+    """
+    Escala las variables numéricas con MinMaxScaler
+
+    :param X_train: Datos train
+    :type X_train: pd.DataFrame
+    :param X_test: Datos test
+    :type X_test: float
+    :returns: Tupla con el scaler y los datos escalados de entrenamiento y testeo.
+    :rtype: tuple
+    """
+    scaler = MinMaxScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    return scaler, pd.DataFrame(X_train_scaled, columns=X_train.columns, index=X_train.index), pd.DataFrame(X_test_scaled, columns=X_test.columns, index=X_test.index)  
+
+
+# # Proceso de Extract, Load and Transform
+# n_semilla = 42
+# dataset = cargar_datos("data", "enriched_employee_dataset.csv")
+# dataset = eliminar_columnas(dataset, ['Employee ID', 'Date of Joining', 'Years in Company'])
+# dataset = eliminar_nulos_columna(dataset, ["Burn Rate"])
+# dataset = eliminar_nulos_multiples(dataset)
+# X_train, X_test, y_train, y_test = split_dataset(dataset, 0.2, 'Burn Rate', n_semilla)
+# variables_para_imputar = [
+#     'Designation', 'Resource Allocation', 'Mental Fatigue Score',
+#     'Work Hours per Week', 'Sleep Hours', 'Work-Life Balance Score',
+#     'Manager Support Score', 'Deadline Pressure Score',
+#     'Recognition Frequency'
+# ]
+# imputer, X_train_imputado, X_test_imputado = imputar_variables(X_train, X_test, variables_para_imputar, 10, n_semilla)
+# y_train_class, y_test_class = clasificar_burn_rate(y_train, y_test)
+# encoder_target, y_train_encoded, y_test_encoded = codificar_target(y_train_class, y_test_class)
+# encoder_categoricas, X_train_codif, X_test_codif = codificar_categoricas(X_train_imputado, X_test_imputado, ["Gender", "Company Type", "WFH Setup Available"])
 
