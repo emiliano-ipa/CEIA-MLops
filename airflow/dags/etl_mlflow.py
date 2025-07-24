@@ -9,7 +9,7 @@ import mlflow
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "plugins"))
 
-from etl import cargar_datos, eliminar_columnas, eliminar_nulos_columna, eliminar_nulos_multiples, split_dataset, imputar_variables, clasificar_burn_rate, codificar_target, codificar_categoricas
+from etl import cargar_datos, eliminar_columnas, eliminar_nulos_columna, eliminar_nulos_multiples, split_dataset, imputar_variables, clasificar_burn_rate, codificar_target, codificar_categoricas, standard_scaler, min_max_scaler
 
 @dag(
     start_date=datetime(2024, 1, 1),
