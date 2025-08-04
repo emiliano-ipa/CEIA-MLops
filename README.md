@@ -16,8 +16,6 @@ Repositorio para el proyecto final de la materia **Operaciones de aprendizaje au
 
 # Proyecto Final de MLOps1
 
-Estructura de servicios para la implementación del proyecto final de **MLOps1 - CEIA - FIUBA**, adaptado y extendido para la entrega de Emiliano Iparraguirre.
-
 Este proyecto tiene como objetivo desplegar un entorno **end-to-end** de MLOps que:
 - Orquesta procesos de ETL y entrenamiento de modelos con **Apache Airflow**.
 - Realiza **búsqueda de hiperparámetros** y tracking de experimentos con **MLflow**.
