@@ -1,149 +1,278 @@
-# Ejemplo de ambiente productivo
-### MLOps1 - CEIA - FIUBA
-Estructura de servicios para la implementación del proyecto final de MLOps1 - CEIA - FIUBA
+#  CEIA - Operaciones de aprendizaje automático I | Proyecto Final
 
-Supongamos que trabajamos para **ML Models and something more Inc.**, la cual ofrece un servicio que proporciona modelos mediante una REST API. Internamente, tanto para realizar tareas de DataOps como de MLOps, la empresa cuenta con varios servicios que ayudan a ejecutar las acciones necesarias. También dispone de un Data Lake en S3, para este caso, simularemos un S3 utilizando MinIO.
+Repositorio para el proyecto final de la materia **Operaciones de aprendizaje automático I** de la Carrera de Especialización en Inteligencia Artificial (CEIA - UBA).
 
-Para simular esta empresa, utilizaremos Docker y, a través de Docker Compose, desplegaremos varios contenedores que representan distintos servicios en un entorno productivo.
+---
 
-Los servicios que contamos son:
-- [Apache Airflow](https://airflow.apache.org/)
-- [MLflow](https://mlflow.org/)
-- API Rest para servir modelos ([FastAPI](https://fastapi.tiangolo.com/))
-- [MinIO](https://min.io/)
-- Base de datos relacional [PostgreSQL](https://www.postgresql.org/)
-- Base de dato key-value [ValKey](https://valkey.io/) 
+## 👥 Integrantes del Grupo
 
-![Diagrama de servicios](final_assign.png)
+- **Martin Brocca** (<martinbrocca@gmail.com>)
+- **Natalia Espector** (<nataliaespector@gmail.com>)
+- **Emiliano Iparraguirre** (<emiliano.iparraguirre22@gmail.com>)
+- **Agustin Lopez Fredes** (<agustin.lopezfredes@gmail.com>)
+- **Fermin Rodriguez del Castillo** (<ferkrodriguez98@gmail.com>)
 
-Por defecto, cuando se inician los multi-contenedores, se crean los siguientes buckets:
+---
+
+# Proyecto Final de MLOps1
+
+Estructura de servicios para la implementación del proyecto final de **MLOps1 - CEIA - FIUBA**, adaptado y extendido para la entrega de Emiliano Iparraguirre.
+
+Este proyecto tiene como objetivo desplegar un entorno **end-to-end** de MLOps que:
+- Orquesta procesos de ETL y entrenamiento de modelos con **Apache Airflow**.
+- Realiza **búsqueda de hiperparámetros** y tracking de experimentos con **MLflow**.
+- Simula un entorno productivo con contenedores Docker para todos los servicios involucrados.
+- Permite **servir modelos** a través de una API REST (FastAPI).
+- Utiliza **MinIO** como Data Lake (simulación de Amazon S3) para almacenamiento de datos y artefactos.
+
+## 🗂️ Servicios incluidos
+
+- [Apache Airflow](https://airflow.apache.org/) – Orquestación de pipelines y ejecución de DAGs.
+- [MLflow](https://mlflow.org/) – Tracking de experimentos, registro de modelos y métricas.
+- [FastAPI](https://fastapi.tiangolo.com/) – API REST para servir modelos.
+- [MinIO](https://min.io/) – Almacenamiento de datos tipo S3.
+- [PostgreSQL](https://www.postgresql.org/) – Base de datos relacional (para MLflow y Airflow).
+- [ValKey](https://valkey.io/) – Base de datos key-value utilizada por Airflow internamente.
+
+![Diagrama de servicios](diagrama_MLOps1.png)
+
+Por defecto, al iniciar el entorno se crean los siguientes **buckets**:
 
 - `s3://data`
-- `s3://mlflow` (usada por MLflow para guardar los artefactos).
+- `s3://mlflow` (usado por MLflow para guardar artefactos)
 
-y las siguientes bases de datos:
+Y las siguientes **bases de datos**:
 
-- `mlflow_db` (usada por MLflow).
-- `airflow` (usada por Airflow).
+- `mlflow_db` (para MLflow)
+- `airflow` (para Airflow)
 
-## Tarea a realizar
+---
 
-La tarea es implementar el modelo que desarrollaron en Aprendizaje de Máquina en este ambiente productivo. Para ello, pueden usar y crear los buckets y bases de datos que necesiten. Lo mínimo que deben realizar es:
+## 🎯 Objetivo del proyecto
 
-- Un DAG en Apache Airflow. Puede ser cualquier tarea que se desee realizar, como entrenar el modelo, un proceso ETL, etc.
-- Un experimento en MLflow de búsqueda de hiperparámetros.
-- Servir el modelo implementado en AMq1 en el servicio de RESTAPI.
-- Documentar (comentarios y docstring en scripts, notebooks, y asegurar que la documentación de FastAPI esté de acuerdo al modelo).
+Implementar modelos de aprendizaje de máquina en un entorno productivo simulado con **Docker Compose**. Los DAGs incluidos realizan:
 
-Desde **ML Models and something more Inc.** autorizan a extender los requisitos mínimos. También pueden utilizar nuevos servicios (por ejemplo, una base de datos no relacional, otro orquestador como MetaFlow, un servicio de API mediante NodeJs, etc.).
+- **Optimización de hiperparámetros** (con [Optuna](https://optuna.org/)) en 10 corridas rápidas para acortar los tiempos de ejecución.
+- Tracking de métricas y parámetros en **MLflow**.
+- Registro de modelos en un **experimento común** que centraliza la comparación de performance.
 
-### Ejemplo 
+Cada DAG tiene como objetivo **entrenar y comparar modelos supervisados de clasificación** con diferentes algoritmos (KNN, SVM y LightGBM).
 
-El [branch `example_implementation`](https://github.com/facundolucianna/amq2-service-ml/tree/example_implementation) contiene un ejemplo de aplicación para guiarse. Se trata de una implementación de un modelo de clasificación utilizando los datos de [Heart Disease](https://archive.ics.uci.edu/dataset/45/heart+disease).
+---
 
-Además se cuenta con una implementación ejemplo de predicción en bache con una parte que funciona gran parte de local en [branch `batch-example`](https://github.com/facundolucianna/amq2-service-ml/tree/example_implementation)
+## 📜 DAGs implementados
 
-## Instalación
+### `etl_dags.py`
+Este DAG realiza un **pipeline ETL** (Extract – Transform – Load) sobre los datos de empleados que luego usarán los modelos:
+- **Extract:** descarga desde MinIO el dataset crudo (`enriched_employee_dataset.csv`).
+- **Transform:** limpia columnas irrelevantes, elimina valores nulos, divide los datos en train/test y realiza imputaciones.
+- **Load:** sube los datasets procesados (`X_train`, `X_test`, `y_train`, `y_test`) al bucket `processed` en MinIO.
 
-1. Para poder levantar todos los servicios, primero instala [Docker](https://docs.docker.com/engine/install/) en tu computadora (o en el servidor que desees usar).
-2. Clona este repositorio.
-3. Crea las carpetas `airflow/config`, `airflow/dags`, `airflow/logs`, `airflow/plugins`, `airflow/logs`.
-4. Si estás en Linux o MacOS, en el archivo `.env`, reemplaza `AIRFLOW_UID` por el de tu usuario o alguno que consideres oportuno (para encontrar el UID, usa el comando `id -u <username>`). De lo contrario, Airflow dejará sus carpetas internas como root y no podrás subir DAGs (en `airflow/dags`) o plugins, etc.
-5. En la carpeta raíz de este repositorio, ejecuta:
+### `etl_mlflow.py`
+Similar a `etl_dags.py`, pero **trackeando el ETL en MLflow**:
+- Loguea parámetros (por ejemplo, columnas eliminadas, split ratio).
+- Loguea métricas (cantidad de filas, missing values antes y después de limpiar).
+- Loguea artefactos (datasets procesados) y estadísticas descriptivas (media, desviación estándar de cada feature).
+- También sube los archivos finales a MinIO para que otros DAGs los usen.
 
+### `dag_knn.py`
+DAG que entrena un modelo de clasificación **K-Nearest Neighbors (KNN)**:
+- Descarga los datos procesados desde MinIO.
+- Ejecuta **10 trials con Optuna** para optimizar hiperparámetros (`n_neighbors`, `weights`, `algorithm`).
+- Registra en MLflow los resultados de cada trial en el experimento `knn_optuna` (F1 y parámetros).
+- Entrena un modelo final con los mejores parámetros.
+- Evalúa el modelo y guarda en un **experimento común**:
+  - F1, precision, recall.
+  - Matriz de confusión (como imagen).
+  - Parámetros finales y el modelo entrenado.
+
+### `dag_svm.py`
+DAG que entrena un modelo de **Support Vector Machine (SVM)** con el mismo flujo que KNN:
+- Descarga datos desde MinIO.
+- Corre 10 trials de Optuna optimizando `C`, `kernel` y `gamma`.
+- Guarda métricas y parámetros en `svm_optuna`.
+- Entrena el mejor modelo y lo registra en el **experimento común** junto con todas las métricas y artefactos.
+
+### `dag_lightgbm.py`
+DAG que entrena un modelo de **LightGBM**:
+- Descarga datos procesados desde MinIO.
+- Ejecuta 10 trials de Optuna optimizando parámetros clave (`n_estimators`, `learning_rate`, `max_depth`, `num_leaves`, `subsample`, `colsample_bytree`).
+- Registra los trials en `lightgbm_optuna` y entrena un modelo final con los mejores parámetros.
+- Loguea en MLflow métricas, matriz de confusión y modelo final. A diferencia de los anteriores, usa `mlflow.lightgbm.log_model` para registrar el modelo final.
+
+---
+
+## ⚙️ Instalación y configuración
+
+### 1️⃣ Instalar Docker
+Instalá [Docker Desktop](https://docs.docker.com/engine/install/) en tu computadora.
+
+### 2️⃣ Clonar el repositorio
+```bash
+git clone https://github.com/martinbrocca/CEIA-MLops.git
+cd CEIA-MLops
+```
+
+### 3️⃣ Crear carpetas necesarias
+```bash
+mkdir -p airflow/config airflow/dags airflow/logs airflow/plugins
+```
+
+### 4️⃣ Ajustar UID de Airflow (solo en Linux/MacOS)
+Editá `.env` y reemplazá `AIRFLOW_UID` por el de tu usuario:
+```bash
+id -u <username>
+```
+
+### 5️⃣ Levantar todos los servicios
 ```bash
 docker compose --profile all up
 ```
 
-6. Una vez que todos los servicios estén funcionando (verifica con el comando `docker ps -a` que todos los servicios estén healthy o revisa en Docker Desktop), podrás acceder a los diferentes servicios mediante:
-   - Apache Airflow: http://localhost:8080
-   - MLflow: http://localhost:5001
-   - MinIO: http://localhost:9001 (ventana de administración de Buckets)
-   - API: http://localhost:8800/
-   - Documentación de la API: http://localhost:8800/docs
+📍 **Accesos:**
+- Apache Airflow → [http://localhost:8080](http://localhost:8080)
+- MLflow → [http://localhost:5001](http://localhost:5001)
+- MinIO → [http://localhost:9001](http://localhost:9001)
+- API REST → [http://localhost:8800/](http://localhost:8800/)
+- Docs API (Swagger) → [http://localhost:8800/docs](http://localhost:8800/docs)
 
-Si estás usando un servidor externo a tu computadora de trabajo, reemplaza `localhost` por su IP (puede ser una privada si tu servidor está en tu LAN o una IP pública si no; revisa firewalls u otras reglas que eviten las conexiones).
+⚠️ **LightGBM:**
+Si vas a correr el DAG de LightGBM, ejecutá un rebuild antes:
+```bash
+docker compose --profile all up --build
+```
 
-Todos los puertos u otras configuraciones se pueden modificar en el archivo `.env`. Se invita a jugar y romper para aprender; siempre puedes volver a clonar este repositorio.
+---
 
-## Apagar los servicios
+## ⏹️ Cómo apagar los servicios
 
-Estos servicios ocupan cierta cantidad de memoria RAM y procesamiento, por lo que cuando no se están utilizando, se recomienda detenerlos. Para hacerlo, ejecuta el siguiente comando:
+Cuando no uses los servicios, podés apagarlos para liberar memoria:
 
 ```bash
 docker compose --profile all down
 ```
 
-Si deseas no solo detenerlos, sino también eliminar toda la infraestructura (liberando espacio en disco), utiliza el siguiente comando:
+Para **eliminar toda la infraestructura** (imágenes, volúmenes y datos):
 
 ```bash
 docker compose down --rmi all --volumes
 ```
 
-Nota: Si haces esto, perderás todo en los buckets y bases de datos.
+📌 **Nota:** Esto borra todos los buckets y bases de datos.
 
-## Aspectos específicos de Airflow
+---
+
+## ⚠️ Consideraciones para entornos Windows
+
+En Windows, para evitar conflictos al reconstruir la imagen de Airflow, se recomienda **crear la imagen solo una vez** y que todos los servicios la utilicen, en vez de que cada uno intente reconstruirla.
+
+En Windows, Docker Desktop maneja las rutas de forma diferente y puede provocar que **cada servicio de Airflow intente reconstruir la imagen `extending_airflow` en paralelo**. Esto genera errores como:
+
+- image already exists (la imagen ya existe)
+- conflictos de acceso a archivos temporales
+- builds interrumpidos y contenedores que no terminan de levantarse
+
+Para evitar estos problemas, lo mejor es **crear la imagen una sola vez** y luego indicarle a todos los servicios de Airflow que usen esa imagen, en vez de dejar que cada contenedor intente reconstruirla.
+
+📌 **1️⃣ Construir la imagen de Airflow manualmente**
+Desde la raíz del proyecto (CEIA-MLops), ejecutá:
+
+```powershell
+docker build -t extending_airflow:latest ./dockerfiles/airflow
+```
+
+✅ Esto dejará lista una imagen llamada `extending_airflow:latest`.
+
+📌 **2️⃣ Editar docker-compose.yml**
+
+Buscá el bloque:
+
+```yaml
+x-airflow-common: &airflow-common
+  build: './dockerfiles/airflow'
+  image: ${AIRFLOW_IMAGE_NAME:-extending_airflow}
+  profiles:
+    - airflow
+    - all
+```
+
+**Borrá la línea de `build:`** y dejalo así:
+
+```yaml
+x-airflow-common: &airflow-common
+  image: extending_airflow:latest
+  profiles:
+    - airflow
+    - all
+```
+
+👉 Esto le indica a Docker Compose que ya existe la imagen y no tiene que construirla cada vez.
+
+📌 **3️⃣ Levantar todos los servicios**
+
+Ahora corré:
+
+```powershell
+docker compose --profile all up
+```
+
+---
+
+## 🔧 Airflow – detalles importantes
 
 ### Variables de entorno
-Airflow ofrece una amplia gama de opciones de configuración. En el archivo `docker-compose.yaml`, dentro de `x-airflow-common`, se encuentran variables de entorno que pueden modificarse para ajustar la configuración de Airflow. Pueden añadirse [otras variables](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html).
+Podés modificar las variables de entorno de Airflow en `docker-compose.yml` dentro de `x-airflow-common`. Más info: [configuración de Airflow](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html).
 
-### Uso de ejecutores externos
-Actualmente, para este caso, Airflow utiliza un ejecutor [celery](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/celery.html), lo que significa que las tareas se ejecutan en otro contenedor. 
+### Ejecutor Celery
+Airflow usa [Celery Executor](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/celery.html), lo que significa que las tareas se ejecutan en contenedores separados (workers).
 
-### Uso de la CLI de Airflow
-
-Si necesitan depurar Apache Airflow, pueden utilizar la CLI de Apache Airflow de la siguiente manera:
-
+### CLI de Airflow
+Para usar la CLI:
 ```bash
 docker compose --profile all --profile debug up
 ```
-
-Una vez que el contenedor esté en funcionamiento, pueden utilizar la CLI de Airflow de la siguiente manera, 
-por ejemplo, para ver la configuración:
-
+Luego, por ejemplo:
 ```bash
-docker-compose run airflow-cli config list      
+docker-compose run airflow-cli config list
+```
+Más info: [CLI de Airflow](https://airflow.apache.org/docs/apache-airflow/stable/cli-and-env-variables-ref.html).
+
+### Variables y conexiones
+- Variables: `secrets/variables.yaml`
+- Conexiones: `secrets/connections.yaml`
+
+Las conexiones agregadas en la UI **no persisten** si borrás los contenedores. Las definidas en YAML sí persisten, pero **no aparecen** en la UI.
+
+---
+
+## ☁️ Conexión con MinIO
+
+Variables de entorno:
+```bash
+AWS_ACCESS_KEY_ID=minio
+AWS_SECRET_ACCESS_KEY=minio123
+AWS_ENDPOINT_URL_S3=http://localhost:9000
 ```
 
-Para obtener más información sobre el comando, pueden consultar [aqui](https://airflow.apache.org/docs/apache-airflow/stable/cli-and-env-variables-ref.html).
-
-### Variables y Conexiones
-
-Si desean agregar variables para accederlas en los DAGs, pueden hacerlo en `secrets/variables.yaml`. Para obtener más [información](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/variables.html), 
-consulten la documentación.
-
-Si desean agregar conexiones en Airflow, pueden hacerlo en `secrets/connections.yaml`. También es posible agregarlas mediante la interfaz de usuario (UI), pero estas no persistirán si se borra todo. Por otro lado, cualquier conexión guardada en `secrets/connections.yaml` no aparecerá en la UI, aunque eso no significa que no exista. Consulten la documentación para obtener más 
-[información](https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/connections.html).
-
-## Conexión con los buckets
-
-Dado que no estamos utilizando Amazon S3, sino una implementación local de los mismos mediante MinIO, es necesario modificar las variables de entorno para conectar con el servicio de MinIO. Las variables de entorno son las siguientes:
-
-```bash
-AWS_ACCESS_KEY_ID=minio   
-AWS_SECRET_ACCESS_KEY=minio123 
-AWS_ENDPOINT_URL_S3=http://localhost:90000
-```
-
-MLflow también tiene una variable de entorno que afecta su conexión a los buckets:
-
+MLflow necesita:
 ```bash
 MLFLOW_S3_ENDPOINT_URL=http://localhost:9000
 ```
-Asegúrate de establecer estas variables de entorno antes de ejecutar tu notebook o scripts en tu máquina o en cualquier otro lugar. Si estás utilizando un servidor externo a tu computadora de trabajo, reemplaza localhost por su dirección IP.
 
-Al hacer esto, podrás utilizar `boto3`, `awswrangler`, etc., en Python con estos buckets, o `awscli` en la consola.
+Esto permite usar `boto3`, `awswrangler`, etc. como si fuera un S3 real.
 
-Si tienes acceso a AWS S3, ten mucho cuidado de no reemplazar tus credenciales de AWS. Si usas las variables de entorno, no tendrás problemas.
+⚠️ Si trabajás con AWS real, cuidado de no sobreescribir tus credenciales.
 
-## Valkey
+---
 
-La base de datos Valkey es usada por Apache Airflow para su funcionamiento. Tal como está configurado ahora no esta expuesto el puerto para poder ser usado externamente. Se puede modificar el archivo `docker-compose.yaml` para habilitaro.
+## 🗄️ Valkey
 
-## Pull Request
+Valkey es usado por Airflow para manejar su backend. Actualmente no expone su puerto, pero puede modificarse el `docker-compose.yml` si quisieras usarlo externamente.
 
-Este repositorio está abierto para que realicen sus propios Pull Requests y así contribuir a mejorarlo. Si desean realizar alguna modificación, **¡son bienvenidos!** También se pueden crear nuevos entornos productivos para aumentar la variedad de implementaciones, idealmente en diferentes `branches`. Algunas ideas que se me ocurren que podrían implementar son:
+---
 
-- Reemplazar Airflow y MLflow con [Metaflow](https://metaflow.org/) o [Kubeflow](https://www.kubeflow.org).
-- Reemplazar MLflow con [Seldon-Core](https://github.com/SeldonIO/seldon-core).
-- Agregar un servicio de tableros como, por ejemplo, [Grafana](https://grafana.com).
+### ✅ Estado actual
+✔️ Infraestructura Docker lista.
+✔️ DAGs de **KNN, SVM y LightGBM** para optimización y comparación de modelos.
+✔️ Tracking en MLflow.
+✔️ API REST básica en FastAPI.
