@@ -1,0 +1,62 @@
+# .ruff.toml
+
+line-length = 100
+target-version = "py312"
+
+# Directorios/archivos a ignorar totalmente
+exclude = [
+  ".git",
+  ".venv",
+  "venv",
+  "env",
+  "__pycache__",
+  "build",
+  "dist",
+  "airflow/logs",
+  "logs",
+  "data",
+  "notebooks",
+  ".mypy_cache",
+  ".ruff_cache",
+]
+
+[lint]
+# Conjuntos de reglas:
+# E,F,W: pycodestyle/pyflakes
+# I: orden de imports (isort)
+# B: flake8-bugbear
+# UP: pyupgrade
+# D: pydocstyle (docstrings)
+select = ["E", "F", "W", "I", "B", "UP", "D"]
+
+# Ignorados globales (docstrings muy ruidosos para este proyecto)
+ignore = [
+  "D100",  # Missing docstring in public module
+  "D104",  # Missing docstring in public package
+  "D105",  # Missing docstring in magic method
+  "D107",  # Missing docstring in __init__
+]
+
+[lint.pydocstyle]
+# Estilo de docstrings
+convention = "google"
+
+[lint.isort]
+known-first-party = ["dags", "src", "fastapi"]
+combine-as-imports = true
+lines-after-imports = 2
+
+# Relajar docstrings en DAGs/infra
+[lint.per-file-ignores]
+"airflow/dags/*.py" = [
+  "D101", "D102", "D103", "D205", "D400", "D401"
+]
+"dockerfiles/**" = ["D"]
+"tests/**" = ["D"]
+
+# Formateador (similar a Black)
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

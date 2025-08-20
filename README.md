@@ -60,14 +60,12 @@ Cada DAG tiene como objetivo **entrenar y comparar modelos supervisados de clasi
 
 ## 📜 DAGs implementados
 
-### `etl_dags.py`
+### `etl_mlflow.py`
 Este DAG realiza un **pipeline ETL** (Extract – Transform – Load) sobre los datos de empleados que luego usarán los modelos:
 - **Extract:** descarga desde MinIO el dataset crudo (`enriched_employee_dataset.csv`).
 - **Transform:** limpia columnas irrelevantes, elimina valores nulos, divide los datos en train/test y realiza imputaciones.
 - **Load:** sube los datasets procesados (`X_train`, `X_test`, `y_train`, `y_test`) al bucket `processed` en MinIO.
-
-### `etl_mlflow.py`
-Similar a `etl_dags.py`, pero **trackeando el ETL en MLflow**:
+- **Trackeo del ETL en MLflow**:
 - Loguea parámetros (por ejemplo, columnas eliminadas, split ratio).
 - Loguea métricas (cantidad de filas, missing values antes y después de limpiar).
 - Loguea artefactos (datasets procesados) y estadísticas descriptivas (media, desviación estándar de cada feature).

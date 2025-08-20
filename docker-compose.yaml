@@ -144,17 +144,18 @@ services:
       - s3
     networks:
       - backend
+    volumes:
+      - ./data:/data:ro   # <--- MONTAR el dataset local
     entrypoint: >
-      /bin/sh -c '
+      /bin/sh -euo pipefail -c '
       sleep 5;
-      /usr/bin/mc alias set s3 http://s3:9000 ${MINIO_ACCESS_KEY:-minio} ${MINIO_SECRET_ACCESS_KEY:-minio123};
-      /usr/bin/mc mb s3/${MLFLOW_BUCKET_NAME:-mlflow};
-      /usr/bin/mc mb s3/${DATA_REPO_BUCKET_NAME:-data};
-       /usr/bin/mc mb s3/${PROCESSED_DATA_BUCKET_NAME:-processed};
-      sleep 5;
-      mc mb -p s3/data || true;
-      mc cp /data/enriched_employee_dataset.csv s3/data/;
-      exit 0;
+      mc alias set s3 http://s3:9000 ${MINIO_ACCESS_KEY:-minio} ${MINIO_SECRET_ACCESS_KEY:-minio123};
+      mc mb s3/${MLFLOW_BUCKET_NAME:-mlflow} || true;
+      mc mb s3/${DATA_REPO_BUCKET_NAME:-data} || true;
+      mc mb s3/${PROCESSED_DATA_BUCKET_NAME:-processed} || true;
+      test -f /data/enriched_employee_dataset.csv;
+      mc cp /data/enriched_employee_dataset.csv s3/${DATA_REPO_BUCKET_NAME:-data}/;
+      echo "OK: dataset copiado a MinIO";
       '
 
   # upload_dataset_to_minio:
@@ -231,6 +232,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
       - MLFLOW_S3_ENDPOINT_URL=http://s3:9000
       - AWS_ENDPOINT_URL_S3=http://s3:9000
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MODEL_EXPERIMENT=modelos_optimizados 
     command: >
       uvicorn app:app 
       --host 0.0.0.0

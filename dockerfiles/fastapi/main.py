@@ -1,4 +1,4 @@
-# dockerfiles/fastapi/app.py
+# fastapi/main.py
 import os
 from typing import List, Literal, Optional, Dict, Any
 import pandas as pd
@@ -10,7 +10,15 @@ from mlflow.tracking import MlflowClient
 # =========================
 # Config MLflow / MinIO
 # =========================
-# En tu docker-compose, MLflow corre como 'mlflow:5000' dentro de la red docker.
+# Fuera de Docker (localhost):
+#   MLFLOW_TRACKING_URI=http://localhost:5001
+# En red Docker compose:
+#   MLFLOW_TRACKING_URI=http://mlflow:5000
+# Artefactos en MinIO (en tu compose):
+#   MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+#   AWS_ACCESS_KEY_ID=minio
+#   AWS_SECRET_ACCESS_KEY=minio123
+
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
 EXPERIMENT_NAME = os.getenv("MODEL_EXPERIMENT", "modelos_optimizados")
 
@@ -19,7 +27,7 @@ client = MlflowClient()
 
 app = FastAPI(title="CEIA-MLops Model Serving", version="1.0.0")
 
-# Cache en memoria
+# Cache simple en memoria
 MODEL_CACHE: Dict[str, Any] = {}
 
 # Mapeo nombre corto -> tag model_type que guardan tus DAGs
@@ -34,12 +42,14 @@ MODEL_TAGS = {
 # Pydantic IO
 # ============
 class Record(BaseModel):
-    __root__: Dict[str, Any]  # features ya procesados como en entrenamiento
+    # Registro flexible de features (ya procesados como en entrenamiento)
+    __root__: Dict[str, Any]
 
 
 class PredictRequest(BaseModel):
     data: List[Record]
-    columns: Optional[List[str]] = None  # opcional: forzar orden/selección de columnas
+    # opcional: forzar orden de columnas
+    columns: Optional[List[str]] = None
 
 
 # =========================
@@ -73,7 +83,7 @@ def _load_model(model_key: str):
         raise RuntimeError(f"No hay runs en '{EXPERIMENT_NAME}' para model_type={tag_value}")
 
     run_id = best.run_id
-    model_uri = f"runs:/{run_id}/model"  # el artefacto se llama 'model' en tus DAGs
+    model_uri = f"runs:/{run_id}/model"  # tus DAGs guardan el artefacto 'model'
     model = mlflow.pyfunc.load_model(model_uri)
 
     MODEL_CACHE[model_key] = {
@@ -124,8 +134,10 @@ def predict(
     rows = [r.__root__ for r in payload.data]
     if not rows:
         raise HTTPException(status_code=400, detail="Payload vacío.")
+
     df = pd.DataFrame(rows)
 
+    # si el cliente especifica columnas (orden/selección), respetarlas
     if payload.columns:
         missing = [c for c in payload.columns if c not in df.columns]
         if missing:
