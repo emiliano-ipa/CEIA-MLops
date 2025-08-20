@@ -2,8 +2,8 @@
 DAG: train_svm
 --------------
 
-Este DAG entrena un modelo **Support Vector Machine (SVM)** para clasificación multiclase.  
-Se utiliza Optuna para búsqueda de hiperparámetros y MLflow para tracking de métricas y artefactos.  
+Este DAG entrena un modelo **Support Vector Machine (SVM)** para clasificación multiclase.
+Se utiliza Optuna para búsqueda de hiperparámetros y MLflow para tracking de métricas y artefactos.
 
 Flujo principal:
 1. Lectura de datasets desde MinIO.
@@ -14,6 +14,7 @@ Flujo principal:
 
 Tags: ml, optuna, minio, multiclase
 """
+
 from airflow.decorators import dag, task
 from datetime import datetime
 from minio import Minio
@@ -83,7 +84,10 @@ def svm_direct_dag():
 
         LOGGER.info(
             "Shapes: X_train=%s, X_test=%s, y_train=%s, y_test=%s",
-            X_train.shape, X_test.shape, y_train.shape, y_test.shape
+            X_train.shape,
+            X_test.shape,
+            y_train.shape,
+            y_test.shape,
         )
 
         mlflow_port = os.getenv("MLFLOW_PORT", "5000")

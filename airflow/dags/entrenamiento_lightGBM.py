@@ -2,8 +2,8 @@
 DAG: train_lightgbm
 -------------------
 
-Este DAG entrena un modelo **LightGBM** para clasificación multiclase.  
-Se optimizan hiperparámetros con Optuna y se registran los resultados en MLflow.  
+Este DAG entrena un modelo **LightGBM** para clasificación multiclase.
+Se optimizan hiperparámetros con Optuna y se registran los resultados en MLflow.
 
 Flujo principal:
 1. Obtención de datasets desde MinIO.
@@ -14,6 +14,7 @@ Flujo principal:
 
 Tags: ml, optuna, minio, multiclase
 """
+
 from airflow.decorators import dag, task
 from datetime import datetime
 from minio import Minio
@@ -83,7 +84,10 @@ def lightgbm_direct_dag():
 
         LOGGER.info(
             "Shapes: X_train=%s, X_test=%s, y_train=%s, y_test=%s",
-            X_train.shape, X_test.shape, y_train.shape, y_test.shape
+            X_train.shape,
+            X_test.shape,
+            y_train.shape,
+            y_test.shape,
         )
 
         mlflow_port = os.getenv("MLFLOW_PORT", "5000")
@@ -153,8 +157,7 @@ def lightgbm_direct_dag():
             mlflow.sklearn.log_model(final_model, "model")
 
         LOGGER.info(
-            "LightGBM entrenado. F1=%.4f, Precision=%.4f, Recall=%.4f",
-            f1, precision, recall
+            "LightGBM entrenado. F1=%.4f, Precision=%.4f, Recall=%.4f", f1, precision, recall
         )
 
     meta = load_data_meta()

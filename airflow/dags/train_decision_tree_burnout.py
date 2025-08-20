@@ -8,8 +8,10 @@ from sklearn.preprocessing import StandardScaler
 import mlflow
 import mlflow.sklearn
 import sys
-sys.path.append('/opt/airflow/plugins/etl')
+
+sys.path.append("/opt/airflow/plugins/etl")
 import etl
+
 
 @dag(
     start_date=datetime(2024, 1, 1),
@@ -17,17 +19,12 @@ import etl
     catchup=False,
     default_args={"retries": 1},
     dag_id="train_decision_tree_burnout",
-    tags=["ml", "minio", "burnout", "decision-tree"]
+    tags=["ml", "minio", "burnout", "decision-tree"],
 )
 def train_decision_tree_burnout():
     @task()
     def extract_data():
-        client = Minio(
-            "minio:9000",
-            access_key="minio",
-            secret_key="minio123",
-            secure=False
-        )
+        client = Minio("minio:9000", access_key="minio", secret_key="minio123", secure=False)
         obj = client.get_object("data", "enriched_employee_dataset.csv")
         data = obj.read()
         df = pd.read_csv(BytesIO(data))
@@ -37,17 +34,24 @@ def train_decision_tree_burnout():
     def preprocess_and_train(json_df):
         df = pd.read_json(json_df)
         # Preprocesamiento usando funciones del plugin
-        dataset = etl.eliminar_columnas(df, ['Employee ID', 'Date of Joining', 'Years in Company'])
+        dataset = etl.eliminar_columnas(df, ["Employee ID", "Date of Joining", "Years in Company"])
         dataset = etl.eliminar_nulos_columna(dataset, ["Burn Rate"])
         dataset = etl.eliminar_nulos_multiples(dataset)
-        X_train, X_test, y_train, y_test = etl.split_dataset(dataset, 0.2, 'Burn Rate', 42)
+        X_train, X_test, y_train, y_test = etl.split_dataset(dataset, 0.2, "Burn Rate", 42)
         variables_para_imputar = [
-            'Designation', 'Resource Allocation', 'Mental Fatigue Score',
-            'Work Hours per Week', 'Sleep Hours', 'Work-Life Balance Score',
-            'Manager Support Score', 'Deadline Pressure Score',
-            'Recognition Frequency'
+            "Designation",
+            "Resource Allocation",
+            "Mental Fatigue Score",
+            "Work Hours per Week",
+            "Sleep Hours",
+            "Work-Life Balance Score",
+            "Manager Support Score",
+            "Deadline Pressure Score",
+            "Recognition Frequency",
         ]
-        _, X_train_imp, X_test_imp = etl.imputar_variables(X_train, X_test, variables_para_imputar, 10, 42)
+        _, X_train_imp, X_test_imp = etl.imputar_variables(
+            X_train, X_test, variables_para_imputar, 10, 42
+        )
         y_train_class, y_test_class = etl.clasificar_burn_rate(y_train, y_test)
         _, y_train_enc, y_test_enc = etl.codificar_target(y_train_class, y_test_class)
         _, X_train_codif, X_test_codif = etl.codificar_categoricas(
@@ -71,4 +75,5 @@ def train_decision_tree_burnout():
     data = extract_data()
     preprocess_and_train(data)
 
-train_tree_dag = train_decision_tree_burnout() 
+
+train_tree_dag = train_decision_tree_burnout()

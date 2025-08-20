@@ -18,5 +18,6 @@ COPY . /app
 # Puerto interno (el compose hace el publish/port mapping)
 EXPOSE 8800
 
+
 # Si NO se usa 'command:' en docker-compose,se puede descomentar:
 # CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8800"]

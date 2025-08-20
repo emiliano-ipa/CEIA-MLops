@@ -2,8 +2,8 @@
 DAG: train_knn
 --------------
 
-Este DAG entrena un modelo **K-Nearest Neighbors (KNN)** utilizando Optuna para 
-optimización de hiperparámetros y MLflow para el tracking de experimentos.  
+Este DAG entrena un modelo **K-Nearest Neighbors (KNN)** utilizando Optuna para
+optimización de hiperparámetros y MLflow para el tracking de experimentos.
 
 Flujo principal:
 1. Carga de datos procesados desde MinIO.
@@ -14,6 +14,7 @@ Flujo principal:
 
 Tags: ml, optuna, minio, multiclase
 """
+
 from airflow.decorators import dag, task
 from datetime import datetime
 from minio import Minio
@@ -101,7 +102,10 @@ def knn_direct_dag():
         # Logs livianos (shapes, no arrays completos)
         LOGGER.info(
             "Shapes: X_train=%s, X_test=%s, y_train=%s, y_test=%s",
-            X_train.shape, X_test.shape, y_train.shape, y_test.shape
+            X_train.shape,
+            X_test.shape,
+            y_train.shape,
+            y_test.shape,
         )
 
         # MLflow tracking
@@ -177,10 +181,7 @@ def knn_direct_dag():
             # Modelo final
             mlflow.sklearn.log_model(final_model, "model")
 
-        LOGGER.info(
-            "Modelo entrenado. F1=%.4f, Precision=%.4f, Recall=%.4f",
-            f1, precision, recall
-        )
+        LOGGER.info("Modelo entrenado. F1=%.4f, Precision=%.4f, Recall=%.4f", f1, precision, recall)
 
     meta = load_data_meta()
     train_knn(meta)
