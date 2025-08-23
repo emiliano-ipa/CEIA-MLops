@@ -13,8 +13,8 @@ RUN pip install --upgrade pip \
  && pip install --no-cache-dir -r /app/requirements.txt
 
 # código de la app (ahora vive en ./fastapi/)
-COPY fastapi/ /app/
+COPY ./fastapi/ /app/
 
 EXPOSE 8800
 # si querés default (no es obligatorio si usás 'command:' en compose):
-# CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8800"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8800", "--reload"]

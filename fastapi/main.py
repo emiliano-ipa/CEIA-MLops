@@ -4,6 +4,7 @@ from typing import List, Literal, Optional, Dict, Any
 import pandas as pd
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel
+from pydantic import RootModel
 import mlflow
 from mlflow.tracking import MlflowClient
 
@@ -41,9 +42,8 @@ MODEL_TAGS = {
 # ============
 # Pydantic IO
 # ============
-class Record(BaseModel):
-    # Registro flexible de features (ya procesados como en entrenamiento)
-    __root__: Dict[str, Any]
+class Record(RootModel):
+    root: Dict[str, Any]
 
 
 class PredictRequest(BaseModel):
@@ -131,7 +131,7 @@ def predict(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    rows = [r.__root__ for r in payload.data]
+    rows = [r.root for r in payload.data]
     if not rows:
         raise HTTPException(status_code=400, detail="Payload vacío.")
 
