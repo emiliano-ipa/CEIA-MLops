@@ -164,3 +164,11 @@ def predict(
 def reload_cache():
     MODEL_CACHE.clear()
     return {"status": "cleared"}
+
+@app.get("/")
+def home():
+    return {
+        "message": "Welcome to the CEIA-MLops Model Serving API!",
+        "status": "ok",
+        "health_endpoint": "/health"
+    }
