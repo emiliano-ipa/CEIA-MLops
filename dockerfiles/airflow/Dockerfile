@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 apache/airflow:2.9.2-python3.12
+FROM apache/airflow:2.9.2-python3.12
 
 # Paquetes del SO
 USER root

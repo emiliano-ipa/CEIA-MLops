@@ -31,8 +31,8 @@ x-airflow-common: &airflow-common
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${PG_USER:-airflow}:${PG_PASSWORD:-airflow}@postgres/${PG_DATABASE:-airflow}
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${PG_USER:-airflow}:${PG_PASSWORD:-airflow}@postgres/${PG_DATABASE:-airflow}
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${PG_USER:-airflow}:${PG_PASSWORD:-airflow}@postgres/${PG_DATABASE:-airflow}
-    AIRFLOW__CORE__FERNET_KEY: ''
+    # AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${PG_USER:-airflow}:${PG_PASSWORD:-airflow}@postgres/${PG_DATABASE:-airflow}
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW__API_AUTH__JWT_SECRET: 'qt2Edq6LIRdv5k0DDznVOA=='
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'False' # Change to 'false' to remove the tutorials and examples
@@ -94,7 +94,7 @@ services:
       retries: 3
 
   redis:
-    image: valkey/valkey:8.1-bookworm
+    image: valkey/valkey:8-bookworm
     expose:
       - 6379
     networks:
@@ -191,7 +191,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "${MLFLOW_PORT:-5000}:5000"
+      - "${MLFLOW_PORT:-5001}:5000"
     networks:
       - frontend
       - backend
@@ -229,8 +229,8 @@ services:
     environment:
       - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minio}
       - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000 
-      - AWS_ENDPOINT_URL_S3=http://minio:9000
+      - MLFLOW_S3_ENDPOINT_URL=http://s3:9000  
+      - AWS_ENDPOINT_URL_S3=http://s3:9000     
       - MLFLOW_TRACKING_URI=http://mlflow:5000
       - MODEL_EXPERIMENT=modelos_optimizados
     healthcheck:
@@ -396,6 +396,9 @@ services:
         echo
         mkdir -v -p /opt/airflow/{logs,dags,plugins,config}
         echo
+        echo "Running airflow db upgrade"
+        /entrypoint airflow db upgrade
+        echo
         echo "Airflow version:"
         /entrypoint airflow version
         echo
@@ -435,8 +438,10 @@ services:
 networks:
   frontend:
     driver: bridge
+    external: false
   backend:
     driver: bridge
+    external: false
 
 volumes:
   db_data:
