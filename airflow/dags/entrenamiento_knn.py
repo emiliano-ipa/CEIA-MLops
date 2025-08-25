@@ -110,7 +110,15 @@ def knn_direct_dag():
 
         # MLflow tracking
         mlflow_port = os.getenv("MLFLOW_PORT", "5000")
-        mlflow.set_tracking_uri(f"http://mlflow:{mlflow_port}")
+        # mlflow.set_tracking_uri(f"http://mlflow:{mlflow_port}")
+        mlflow.set_tracking_uri("http://mlflow:5000")  # Internal Docker port is always 5000
+        print(f"MLflow tracking URI: {mlflow.get_tracking_uri()}")
+        try:
+            client = mlflow.tracking.MlflowClient()
+            experiments = client.search_experiments()
+            print(f"Connected to MLflow. Found {len(experiments)} experiments.")
+        except Exception as e:
+            print(f"MLflow connection error: {e}")
 
         # =========================================
         # Optuna: experimento específico del modelo
@@ -178,8 +186,13 @@ def knn_direct_dag():
             plt.close()
             mlflow.log_artifact("confusion_matrix.png")
 
-            # Modelo final
-            mlflow.sklearn.log_model(final_model, "model")
+            try:
+                # Modelo final
+                mlflow.sklearn.log_model(final_model, "model")
+                print("Model logged successfully")
+            except Exception as e:
+                print(f"Failed to log model: {e}")
+                raise
 
         LOGGER.info("Modelo entrenado. F1=%.4f, Precision=%.4f, Recall=%.4f", f1, precision, recall)
 

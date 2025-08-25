@@ -5,3 +5,4 @@ mlflow
 pandas
 scikit-learn
 lightgbm
+boto3
